@@ -2,11 +2,14 @@
 # Stage 1: Build stage
 ### Use a specific base image tag instead of “version:latest”
 FROM node:18 AS build
+### Optimize Node.js tooling for production
+ENV NODE_ENV production
+
 WORKDIR /app
 COPY ./app/package*.json ./
-RUN npm ci
+RUN npm ci --only=production
 
-COPY ./app .
+COPY --chown=node:node ./app .
 
 # Stage 2: Production stage
 FROM node:18-alpine
