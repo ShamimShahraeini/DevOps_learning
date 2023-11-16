@@ -15,6 +15,8 @@ WORKDIR /app
 COPY --from=build /app .
 EXPOSE 3000
 
+USER node
 ### Leverage HEALTHCHECK
-HEALTHCHECK CMD curl --fail http://localhost:3000 || exit 1  
+HEALTHCHECK --interval=10s --timeout=10s --start-period=10s --retries=3 \
+    CMD wget http://localhost:3000 --no-verbose --tries=1 --spider || exit 1  
 CMD ["npm", "start"]
