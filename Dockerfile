@@ -4,7 +4,6 @@
 FROM node:18 AS build
 WORKDIR /app
 COPY ./app/package*.json ./
-#RUN npm install
 RUN npm ci
 
 COPY ./app .
@@ -14,9 +13,10 @@ FROM node:18-alpine
 WORKDIR /app
 COPY --from=build /app .
 EXPOSE 3000
-
-USER node
 ### Leverage HEALTHCHECK
 HEALTHCHECK --interval=10s --timeout=10s --start-period=10s --retries=3 \
     CMD wget http://localhost:3000 --no-verbose --tries=1 --spider || exit 1  
+
+### Run containers as non-root
+USER node
 CMD ["npm", "start"]
