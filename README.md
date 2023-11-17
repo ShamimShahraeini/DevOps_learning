@@ -1,4 +1,4 @@
-# Digikala_DevOps_hiring_task1
+# Digikala DevOps hiring task1
 
 
 This is a simple Node.js web application and containerizing of it.
