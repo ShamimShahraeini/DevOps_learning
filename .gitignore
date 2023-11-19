@@ -3,3 +3,5 @@ DevOps_hiring_task1.pdf
 
 node_modules/
 package-lock.json
+
+.vagrant
