@@ -1,0 +1,4 @@
+apiVersion: v2
+name: simple-node-app-chart
+description: A Helm chart for a simple Node.js web application
+version: 0.1.0

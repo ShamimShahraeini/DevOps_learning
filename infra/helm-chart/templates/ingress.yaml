@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "simple-node-app-chart.fullname" . }}
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: {{ .Values.ingress.hosts.host }}
+      http:
+        paths:
+          - path: {{ .Values.ingress.hosts.paths }}
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ include "simple-node-app-chart.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
