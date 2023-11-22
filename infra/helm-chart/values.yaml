@@ -2,7 +2,8 @@ replicaCount: 1
 
 image:
   ## ToDo: add registery
-  repository: digikala-node-app
+  #repository: digikala-node-app
+  path: /home/vagrant/digikala-node-app.tar
   tag: latest
   pullPolicy: IfNotPresent
 

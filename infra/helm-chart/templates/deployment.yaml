@@ -1,22 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "simple-node-app-chart.fullname" . }}
+  name: {{ .Release.Name }}
   labels:
-    app: {{ include "simple-node-app-chart.name" . }}
+    app: {{ .Release.Name }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ include "simple-node-app-chart.name" . }}
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ include "simple-node-app-chart.name" . }}
+        app: {{ .Release.Name }}
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          #image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.image.path }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{ toYaml .Values.resources | nindent 12 }}
@@ -36,11 +37,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "simple-node-app-chart.fullname" . }}
+  name: {{ .Release.Name }}
 spec:
   type: {{ .Values.service.type }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: 3000
   selector:
-    app: {{ include "simple-node-app-chart.name" . }}
+    app: {{ .Release.Name }}
