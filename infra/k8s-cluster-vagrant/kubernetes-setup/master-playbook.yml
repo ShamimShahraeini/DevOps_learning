@@ -128,7 +128,7 @@
       state: restarted
 
   - name: Initialize the Kubernetes cluster using kubeadm
-    command: kubeadm init --apiserver-advertise-address="192.168.56.10" --apiserver-cert-extra-sans="192.168.56.10" --pod-network-cidr=172.16.0.0/16
+    command: kubeadm init --apiserver-advertise-address="{{ the_ip }}" --apiserver-cert-extra-sans="{{ the_ip }}" --pod-network-cidr=172.16.0.0/16
 
   - name: Create kube directory
     file:
@@ -176,3 +176,33 @@
   # handlers:
   #   - name: docker status
   #     service: name=docker state=started
+
+  - name: Copy Helm chart of app
+    copy:
+      src: ../../helm-chart/
+      dest: /home/vagrant/helm-chart/
+
+  - name: Download Helm binary
+    get_url:
+      url: "https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz"
+      dest: "/tmp/helm-v3.12.0-linux-amd64.tar.gz"
+
+  - name: Extract Helm binary
+    ansible.builtin.unarchive:
+      src: "/tmp/helm-v3.12.0-linux-amd64.tar.gz"
+      dest: "/tmp"
+      remote_src: yes
+
+  - name: Move Helm binary to /usr/local/bin
+    ansible.builtin.command:
+      cmd: "mv /tmp/linux-amd64/helm /usr/local/bin/helm"
+
+  - name: Install Helm chart
+    command: "{{ item }}"
+    with_items:
+     - cd /home/vagrant/helm-chart/
+     - helm install simple-node-app-release .
+
+  - name: Install K9s
+    ansible.builtin.shell:
+      cmd: "curl -sS https://webinstall.dev/k9s | bash"
