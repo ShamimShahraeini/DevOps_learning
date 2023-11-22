@@ -16,8 +16,7 @@ spec:
     spec:
       containers:
         - name: {{ .Chart.Name }}
-          #image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          image: "{{ .Values.image.path }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           resources:
             {{ toYaml .Values.resources | nindent 12 }}
@@ -25,14 +24,17 @@ spec:
             httpGet:
               path: "{{ .Values.healthCheckPath }}"
               port: 3000
-            initialDelaySeconds: 3
-            periodSeconds: 3
+            initialDelaySeconds: 300
+            periodSeconds: 30
+            timeoutSeconds: 20
           readinessProbe:
             httpGet:
               path: "{{ .Values.healthCheckPath }}"
               port: 3000
             initialDelaySeconds: 3
             periodSeconds: 3
+      imagePullSecrets:
+        - name: ghcr-pull-secret
 ---
 apiVersion: v1
 kind: Service

@@ -1,10 +1,10 @@
 replicaCount: 1
 
 image:
-  ## ToDo: add registery
-  #repository: digikala-node-app
-  path: /home/vagrant/digikala-node-app.tar
+  repository: ghcr.io/shamimshahraeini/digikala_devops_hiring_task1/digikala-node-app
   tag: latest
+  pullSecrets:
+    - name: ghcr-pull-secret
   pullPolicy: IfNotPresent
 
 resources:
