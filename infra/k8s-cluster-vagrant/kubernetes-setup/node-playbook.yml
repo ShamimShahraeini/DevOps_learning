@@ -12,36 +12,46 @@
       - apt-transport-https
       - ca-certificates
       - curl
-      - gnupg-agent
-      - software-properties-common
+      - gnupg2
+      - software-properties-common 
+      - net-tools
 
-  - name: Add an apt signing key for Docker
-    apt_key:
-      url: https://download.docker.com/linux/ubuntu/gpg
-      state: present
+  # - name: Add an apt signing key for Docker
+  #   apt_key:
+  #     url: https://download.docker.com/linux/ubuntu/gpg
+  #     state: present
 
-  - name: Add apt repository for stable version
-    apt_repository:
-      repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
-      state: present
+  # - name: Add apt repository for stable version
+  #   apt_repository:
+  #     repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+  #     state: present
 
-  - name: Install docker and its dependecies
+  # - name: Install docker and its dependecies
+  #   apt: 
+  #     name: "{{ packages }}"
+  #     state: present
+  #     update_cache: yes
+  #   vars:
+  #     packages:
+  #     - docker-ce 
+  #     - docker-ce-cli 
+  #     - containerd.io
+  #   notify:
+  #     - docker status
+
+  # - name: Add vagrant user to docker group
+  #   user:
+  #     name: vagrant
+  #     group: docker
+
+  - name: Install containerd
     apt: 
       name: "{{ packages }}"
       state: present
       update_cache: yes
     vars:
       packages:
-      - docker-ce 
-      - docker-ce-cli 
-      - containerd.io
-    notify:
-      - docker status
-
-  - name: Add vagrant user to docker group
-    user:
-      name: vagrant
-      group: docker
+      - containerd
 
   - name: Remove swapfile from /etc/fstab
     mount:
@@ -74,15 +84,42 @@
       update_cache: yes
     vars:
       packages:
-        - kubelet 
-        - kubeadm 
-        - kubectl
+        - kubelet=1.23.0-00
+        - kubeadm=1.23.0-00
+        - kubectl=1.23.0-00
+
+  - name: Configure containerd
+    blockinfile:
+      create: true
+      path: /etc/modules-load.d/containerd.conf
+      block: |
+        overlay
+        br_netfilter
+
+  - name: Enable kernel modules
+    shell: |
+      modprobe overlay
+      modprobe br_netfilter
+
+  - name: Configure IP forwarding and iptables
+    blockinfile:
+      create: true
+      path: /etc/sysctl.conf
+      block: |
+        net.bridge.bridge-nf-call-iptables = 1
+        net.ipv4.ip_forward = 1
+
+  - name: Persist changes
+    command: sysctl -p
+
+  - name: Get IP eth1 addr
+    shell: ifconfig eth1 | grep 'inet' | cut -d{{':'}} -f2 | awk '{ print $2 }'
+    register: output_ip
 
   - name: Configure node ip
     lineinfile:
-      path: /etc/default/kubelet
-      line: KUBELET_EXTRA_ARGS=--node-ip={{ node_ip }}
-      create: yes 
+      path: /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+      line: Environment="KUBELET_EXTRA_ARGS=--node-ip={{ output_ip.stdout }}"
 
   - name: Restart kubelet
     service:
@@ -96,6 +133,6 @@
   - name: Join the node to cluster
     command: sh /tmp/join-command.sh
 
-  handlers:
-    - name: docker status
-      service: name=docker state=started
+  # handlers:
+  #   - name: docker status
+  #     service: name=docker state=started
