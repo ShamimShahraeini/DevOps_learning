@@ -1,0 +1,53 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+
+      - name: Install Dependencies
+        run: |
+          cd app/
+          npm ci
+
+      - name: Build Docker Image
+        run: |
+          VERSION:$(cat app/package.json | jq '.version')
+          docker build -t digikala-node-app docker.pkg.github.com/shamimshahraeini/digikala_devops_hiring_task1/digikala-node-app:$VERSION .
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          apt install jq -y
+          docker push digikala-node-app docker.pkg.github.com/shamimshahraeini/digikala_devops_hiring_task1/digikala-node-app:$VERSION
+
+  deploy:
+    runs-on: ubuntu-22.04
+    needs: build
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Deploy the app
+        run: |
+          cd infra/k8s-cluster-ansible
+          vagrant up
+
+
+#      - name: Set up k8s cluster
+#        run: |
+#          cd infra/k8s-cluster-ansible
+#          asible=playbook -i inventory.ini k8s_cluster.yml
+#      - name: Deploy to Kubernetes
+#        run: helm install simple-node-app-release .
