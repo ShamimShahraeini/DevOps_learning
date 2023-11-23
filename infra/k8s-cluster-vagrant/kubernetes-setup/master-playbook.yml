@@ -197,11 +197,18 @@
     ansible.builtin.command:
       cmd: "mv /tmp/linux-amd64/helm /usr/local/bin/helm"
 
+  # - name: Change directory to /home/vagrant/helm-chart
+  #   ansible.builtin.command:
+  #     cmd: "cd /home/vagrant/helm-chart"
+  
   - name: Install Helm chart
-    command: "{{ item }}"
+    ansible.builtin.command:
+      cmd: "{{ item }}"
     with_items:
-     - cd /home/vagrant/helm-chart/
-     - helm install simple-node-app-release .
+    - pwd
+    - helm install simple-node-app-release .
+    args:
+      chdir: "/home/vagrant/helm-chart"
 
   - name: Install K9s
     ansible.builtin.shell:
