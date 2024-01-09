@@ -1,0 +1,89 @@
+Vagrant.configure("2") do |config|
+  config.vm.box = "ubuntu/focal64"
+  config.vm.network "forwarded_port", guest: 8080, host: 8080
+
+  config.vm.provision "shell", inline: <<-SHELL
+    # Install Docker
+    sudo apt-get update
+    sudo apt-get install -y docker.io systemd-container
+    # Simple Node.js app
+    mkdir app
+    cd app
+    cat <<EOF > app.js
+const express = require('express');
+const os = require('os');
+
+const app = express();
+const port = 3000;
+const hostname = '0.0.0.0';
+
+app.get('/', (req, res) => {
+  const workerId = os.hostname();
+  res.send(`Hello from Worker ${workerId}`);
+});
+
+app.listen(port, () => {
+  console.log(`Server is running at http://${hostname}:${port}/`);
+});
+EOF
+
+    cat <<EOF > package.json
+{
+    "name": "simple-node-app",
+    "version": "1.0.0",
+    "description": "A simple Node.js web application",
+    "main": "app.js",
+    "scripts": {
+      "start": "node app.js"
+    },
+    "dependencies": {
+      "express": "^4.17.1"
+    }
+}
+EOF
+
+    # Build a simple Node.js app Docker image
+    cat <<EOF > Dockerfile
+FROM node:alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 8080
+CMD ["npm", "start"]
+EOF
+    sudo docker build -t nodejs-app .
+
+    # Create and start a container using systemd-nspawn
+    sudo systemd-nspawn --directory=/var/lib/machines/nspawn-node --bind=/sys/fs/cgroup:/sys/fs/cgroup --boot --image=nodejs-app --bind-ro=/var/run/docker.sock
+
+    # Create a systemd service file for the ephemeral container
+    cat <<EOF | sudo tee /etc/systemd/system/nodejs-app.service
+[Unit]
+Description=Node.js App
+
+[Service]
+ExecStartPre=/usr/bin/docker build -t nodejs-app /home/vagrant/app
+ExecStartPre=/usr/bin/docker create --name nodejs-app nodejs-app
+ExecStartPre=/usr/bin/docker export nodejs-app -o nodejs-app-test.tar
+ExecStartPre=/usr/bin/docker rm nodejs-app
+ExecStartPre=/usr/bin/mkdir -p /opt/nodejs-app
+ExecStartPre=/usr/bin/mv nodejs-app-test.tar /opt/nodejs-app
+ExecStartPre=/usr/bin/echo "here"
+#ExecStartPre=cd /opt/nodejs-app/
+ExecStartPre=/usr/bin/tar -xf /opt/nodejs-app/nodejs-app-test.tar -C /opt/nodejs-app
+ExecStartPre=/usr/bin/echo "test"
+ExecStart=/usr/bin/systemd-nspawn --directory=/opt/nodejs-app -x --machin nodejs-app-test
+ExecStop=/usr/bin/machinectl terminate nodejs-app-test
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Enable and start the systemd service
+    sudo systemctl enable nodejs-app.service
+    sudo systemctl start nodejs-app.service
+  SHELL
+end
