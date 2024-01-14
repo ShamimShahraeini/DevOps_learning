@@ -1,0 +1,12 @@
+[Unit]
+Description=nspawn service
+
+[Service]
+ExecStartPre=/usr/bin/echo "test"
+ExecStart=/usr/bin/systemd-nspawn --quiet --keep-unit --boot --link-journal=try-guest --directory=/var/lib/machines/debian -M my-test
+ExecStop=/usr/bin/machinectl terminate my-test
+KillMode=process
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

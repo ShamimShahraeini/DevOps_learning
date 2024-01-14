@@ -1,0 +1,6 @@
+Boot=on
+Ephemeral=on
+User=root
+Hostname=my-test
+PrivateUsers=pick
+WorkingDirectory=/var/lib/machines/debians
