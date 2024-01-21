@@ -1,0 +1,20 @@
+[Unit]
+Description=Container Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/systemd-nspawn --quiet --keep-unit -D /var/lib/machines/mysql
+# --pipe /bin/bash <<'EOF'
+#echo "Now running inside nspawn $(pwd)"
+#systemctl enable systemd-networkd
+#systemctl enable systemd-resolved
+#EOF
+#SyslogIdentifier=%N
+KillMode=mixed
+Type=simple
+Restart=always
+RestartSec=5
+ExecStop=/bin/bash -c 'sudo machinectl terminate nspawntest'
+
+[Install]
+WantedBy=default.target

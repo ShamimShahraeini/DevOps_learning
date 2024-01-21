@@ -1,0 +1,6 @@
+[Exec]
+Hostname=mysql
+Boot=on
+
+[Network]
+#Port=3306:3306

@@ -1,0 +1,9 @@
+[Match]
+Name=br0
+ 
+[Network]
+Address=172.23.0.1/24
+LinkLocalAddressing=yes
+IPMasquerade=yes
+LLDP=yes
+EmitLLDP=customer-bridge

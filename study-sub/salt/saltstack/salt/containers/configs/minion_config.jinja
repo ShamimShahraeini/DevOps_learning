@@ -1,0 +1,4 @@
+# minion_config_file.jinja
+
+{{ salt['grains.get']('host') }}:
+  id: {{ salt['grains.get']('host') }}
