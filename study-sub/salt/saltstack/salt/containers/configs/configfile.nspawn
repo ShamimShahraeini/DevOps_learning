@@ -1,5 +1,5 @@
 [Exec]
-Hostname=mysql
+Hostname={{ CONTAINER_NAME }}
 Boot=on
 
 [Network]
