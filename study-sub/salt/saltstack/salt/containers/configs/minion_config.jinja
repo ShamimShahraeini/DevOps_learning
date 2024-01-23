@@ -1,4 +1,2 @@
-# minion_config_file.jinja
-
-{{ salt['grains.get']('host') }}:
-  id: {{ salt['grains.get']('host') }}
+master: 192.168.56.10
+id: {{ salt['grains.get']('host') }}-{{ CONTAINER_NAME }}

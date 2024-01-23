@@ -1,5 +1,4 @@
 [Exec]
-Hostname={{ CONTAINER_NAME }}
 Boot=on
 
 [Network]

@@ -1,5 +1,7 @@
 {% set CONTAINER_NAME = 'mysql' %}
 {% set BASE_PATH = '/var/lib/machines/' %}
+{% set FULL_CONTAINER_NAME = "{{ salt['grains.get']('host') }}-{{ CONTAINER_NAME }}" %}
+{% set FULL_PATH = '{{ BASE_PATH }}{{ CONTAINER_NAME }}' %}
 {% set NET = 'notbridge' %}
 
 ############################ container prerequisites
@@ -24,9 +26,10 @@ create_container_fs:
   cmd.run:
     - name: |
         mkdir -p {{ BASE_PATH }}{{ CONTAINER_NAME }}
-        debootstrap --include=systemd,dbus stable {{ BASE_PATH }}{{ CONTAINER_NAME }}
+        debootstrap --include="systemd,dbus,wget,net-tools" stable {{ BASE_PATH }}{{ CONTAINER_NAME }}
         chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} printf 'pts/0\npts/1\n' >> /etc/securetty
         chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /bin/bash -c "echo -e '1234\n1234' | passwd"
+        chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /bin/bash -c "echo -e '$(hostname)-{{ CONTAINER_NAME }}' | tee /etc/hostname"
 {% endif %}
 
 {% if NET == 'bridge' %}
@@ -41,7 +44,6 @@ create_container_network:
     - source: salt://containers/configs/net.network
 {% endif%}
 
-## TODO: make the config files dynamic (jinja>var>container, path, ...)
 create_container_configfile:
   file.managed:
     - name: /etc/systemd/nspawn/{{ CONTAINER_NAME }}.nspawn
@@ -57,73 +59,50 @@ create_container_unitfile:
     - template: jinja                  
     - CONTAINER_NAME: {{ CONTAINER_NAME }}    
 
-copy_salt_install_script_to_container:
-  file.managed:
-    - name: '{{ BASE_PATH }}{{ CONTAINER_NAME }}/root/bootstrap_salt.sh'
-    - source: /tmp/bootstrap_salt.sh
-
 create_container:
   cmd.run:
     - name: |
-        chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /usr/bin/sh /root/bootstrap_salt.sh
         systemctl daemon-reload
         systemctl start container@{{ CONTAINER_NAME }}.service
         systemctl enable container@{{ CONTAINER_NAME }}.service
 
 ############################ container setup
 
-# install_saltminion_on_container:
-#   cmd.run:
-#     - name: machinectl shell {{ CONTAINER_NAME }} /usr/bin/sh /root/bootstrap_salt.sh
-#          machinectl shell --setenv=SHELL=/bin/bash {{ CONTAINER_NAME }} /bin/bash --login -i
-#     - runas: root
-    
+## TODO: ask and search for the reason: `Failed to get shell PTY: Unit container-shell@1.service was already loaded or has a fragment file + Failed to get shell PTY: Protocol error`
 
-# requirements_to_install_saltminion_on_container:
-#   cmd.run:
-#     - name: |
-#         machinectl shell {{ CONTAINER_NAME }} /usr/bin/bash -c 'apt install curl -y'
-#         machinectl shell {{ CONTAINER_NAME }} /usr/bin/bash -c 'curl -fsSL -o /etc/apt/keyrings/salt-archive-keyring-2023.gpg https://repo.saltproject.io/salt/py3/debian/12/amd64/SALT-PROJECT-GPG-PUBKEY-2023.gpg; ls'
-#         machinectl shell {{ CONTAINER_NAME }} /usr/bin/bash -c 'echo "deb [signed-by=/etc/apt/keyrings/salt-archive-keyring-2023.gpg arch=amd64] https://repo.saltproject.io/salt/py3/debian/12/amd64/latest bookworm main" | tee /etc/apt/sources.list.d/salt.list; ls'
-#     - runas: root
+install_saltminion_on_container:
+  cmd.run:
+    - name: machinectl shell {{ CONTAINER_NAME }} /bin/bash -c 'wget -O - https://bootstrap.saltproject.io | sh'
+    - require: 
+      - cmd: create_container
 
-## TODO: ask and search for the reason: `Failed to get shell PTY: Unit container-shell@1.service was already loaded or has a fragment file`
-# bug:
-#   cmd.run:
-#     - name: |
-#         systemctl restart container@{{ CONTAINER_NAME }}.service
-#     - require_in: 
-#       - cmd: install_saltminion_on_container
 
-# install_saltminion_on_container:
-#   cmd.run:
-#     - name: |       
-#         machinectl shell {{ CONTAINER_NAME }} /usr/bin/apt-get update
-#         machinectl shell {{ CONTAINER_NAME }} /usr/bin/bash -c 'apt-get install salt-minion -y'
-#     - require: 
-#       - cmd: requirements_to_install_saltminion_on_container
-
-# install_saltminion_on_container:
-#   cmd.script:
-#     - source: salt://containers/script.sh.jinja
-
-## TODO: add 'require' statements
-copy_salt_config_to_container:
-  file.copy:
-    - name: {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/salt/minion
-    - source: /etc/salt/minion
-
-configure_salt_minion:
+## TODO: add dynamic "master" config > use grains? maybe
+configure_saltminion_on_container:
   file.managed:
-    - name: {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/salt/minion_id
+    - name: {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/salt/minion
     - source: salt://containers/configs/minion_config.jinja
     - user: root
     - group: root
     - mode: 644
+    - makedirs: True
+    - template: jinja                  
+    - CONTAINER_NAME: {{ CONTAINER_NAME }}  
+    - require:
+        - cmd: install_saltminion_on_container
+
+
+key_saltminion_on_container:
+  file.absent:
+    - name: {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/salt/pki
+    - require:
+        - cmd: install_saltminion_on_container
 
 start_salt_minion:
   cmd.run:
-    - name: machinectl shell {{ CONTAINER_NAME }} /usr/bin/bash -c 'systemctl restart salt-minion'
+    - name: machinectl shell {{ CONTAINER_NAME }} /bin/bash -c 'systemctl restart salt-minion'
+    - require:
+      - file: configure_saltminion_on_container
 
 
 
