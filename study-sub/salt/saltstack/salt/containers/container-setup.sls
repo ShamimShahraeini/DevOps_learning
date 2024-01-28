@@ -11,7 +11,7 @@ create_container_fs:
   cmd.run:
     - name: |
         mkdir -p {{ BASE_PATH }}{{ CONTAINER_NAME }}
-        debootstrap --include="systemd,dbus,wget,net-tools" stable {{ BASE_PATH }}{{ CONTAINER_NAME }}
+        debootstrap --include="systemd,dbus,wget,net-tools,ssh" stable {{ BASE_PATH }}{{ CONTAINER_NAME }}
         chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} printf 'pts/0\npts/1\n' >> /etc/securetty
         chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /bin/bash -c "echo -e '1234\n1234' | passwd"
         chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /bin/bash -c "echo -e '$(hostname)-{{ CONTAINER_NAME }}' | tee /etc/hostname"

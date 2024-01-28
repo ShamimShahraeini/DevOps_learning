@@ -1,0 +1,4 @@
+# Salt file: ssh/sshd_config.jinja
+
+Port 2222
+PermitRootLogin without-password
