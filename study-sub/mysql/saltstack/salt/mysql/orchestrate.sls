@@ -2,7 +2,7 @@ mysql_all:
   salt.state:
     - tgt: '*mysql'
     - sls:
-      - containers.container-ssh-config
+      - mysql.init
 
 mysql_master:
   salt.state:
@@ -13,7 +13,6 @@ mysql_master:
 mysql_replica:
   salt.state:
     - tgt: 'minion2-mysql'
-      #- 'minion3-mysql'
     - sls:
       - mysql.replication
 

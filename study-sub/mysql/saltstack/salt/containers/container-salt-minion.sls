@@ -8,6 +8,8 @@ install_saltminion_on_container:
     - require:
       - sls: containers.container-setup
 
+
+## TODO: add dynamic "master" config > use grains? maybe
 configure_saltminion_on_container:
   file.managed:
     - name: {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/salt/minion
@@ -20,6 +22,7 @@ configure_saltminion_on_container:
     - CONTAINER_NAME: {{ CONTAINER_NAME }}  
     - require:
         - cmd: install_saltminion_on_container
+
 
 key_saltminion_on_container:
   file.absent:
