@@ -9,3 +9,10 @@ include:
   - containers.container-setup
   #- containers.network-setup
   - containers.container-salt-minion
+
+# on master > salt '*' state.highstate
+## salt-key -A -y
+
+## run_highstate:
+##   cmd.state.highstate:
+##     - tgt: '*'

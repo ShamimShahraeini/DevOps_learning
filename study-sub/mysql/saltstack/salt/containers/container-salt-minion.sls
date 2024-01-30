@@ -20,6 +20,7 @@ configure_saltminion_on_container:
     - makedirs: True
     - template: jinja                  
     - CONTAINER_NAME: {{ CONTAINER_NAME }}  
+    - MASTER_IP: {{ salt['pillar.get']('master:ip') }}
     - require:
         - cmd: install_saltminion_on_container
 

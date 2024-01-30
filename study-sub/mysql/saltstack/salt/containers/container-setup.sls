@@ -15,6 +15,7 @@ create_container_fs:
         chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} printf 'pts/0\npts/1\n' >> /etc/securetty
         chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /bin/bash -c "echo -e '1234\n1234' | passwd"
         chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /bin/bash -c "echo -e '$(hostname)-{{ CONTAINER_NAME }}' | tee /etc/hostname"
+    - unless: test -f {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/securetty
 {% endif %}
 
 ############################ container creation
@@ -26,6 +27,7 @@ create_container_configfile:
     - makedirs: True
     - template: jinja                  
     - CONTAINER_NAME: {{ CONTAINER_NAME }}      
+    - unless: test -f /etc/systemd/nspawn/{{ CONTAINER_NAME }}.nspawn
 
 create_container_unitfile:
   file.managed:
@@ -33,6 +35,7 @@ create_container_unitfile:
     - source: salt://containers/configs/unitfile.service
     - template: jinja                  
     - CONTAINER_NAME: {{ CONTAINER_NAME }}    
+    - unless: test -f /etc/systemd/system/container@{{ CONTAINER_NAME }}.service
 
 create_container:
   cmd.run:
@@ -41,3 +44,6 @@ create_container:
         systemctl start container@{{ CONTAINER_NAME }}.service
         systemctl enable container@{{ CONTAINER_NAME }}.service
         sleep 30
+    - unless: machinectl | grep {{ CONTAINER_NAME }}
+    - watch:
+      - file: create_container_unitfile

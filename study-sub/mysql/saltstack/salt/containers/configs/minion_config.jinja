@@ -1,2 +1,2 @@
-master: {{ salt['pillar.get']('master:ip') }}
+master: {{ MASTER_IP }}
 id: {{ salt['grains.get']('host') }}-{{ CONTAINER_NAME }}
