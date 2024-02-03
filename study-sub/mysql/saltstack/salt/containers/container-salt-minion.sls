@@ -38,6 +38,3 @@ start_saltminion_on_container:
     - name: machinectl shell {{ CONTAINER_NAME }} /bin/bash -c 'systemctl restart salt-minion'
     - require:
       - file: configure_saltminion_on_container
-
-
-## TODO: add the master state > rm /etc/salt/pki/master/minions/{{ salt['grains.get']('host') }}-{{ CONTAINER_NAME }} && salt-key -A
