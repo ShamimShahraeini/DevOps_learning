@@ -1,21 +1,22 @@
-{% set CONTAINER_NAME = 'mysql' %}
-{% set BASE_PATH = '/var/lib/machines/' %}
+{% set CONTAINER_NAME = salt['pillar.get'](grains.get('id') + ':container_name') %}
+{% set BASE_PATH = salt['pillar.get'](grains.get('id') + ':container_base_path') %}
+{% set FULL_PATH = BASE_PATH ~ CONTAINER_NAME %}
 
 include:
   - containers.prerequisites
 
 ############################ container fs creation
 
-{% if not salt['file.directory_exists' ]('{{ BASE_PATH }}{{ CONTAINER_NAME }}') %}
+{% if not salt['file.directory_exists' ]('{{ FULL_PATH }}') %}
 create_container_fs:
   cmd.run:
     - name: |
-        mkdir -p {{ BASE_PATH }}{{ CONTAINER_NAME }}
-        debootstrap --include="systemd,dbus,wget,net-tools,ssh" stable {{ BASE_PATH }}{{ CONTAINER_NAME }}
-        chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} printf 'pts/0\npts/1\n' >> /etc/securetty
-        chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /bin/bash -c "echo -e '1234\n1234' | passwd"
-        chroot {{ BASE_PATH }}{{ CONTAINER_NAME }} /bin/bash -c "echo -e '$(hostname)-{{ CONTAINER_NAME }}' | tee /etc/hostname"
-    - unless: test -f {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/securetty
+        mkdir -p {{ FULL_PATH }}
+        debootstrap --include="systemd,dbus,wget,net-tools,ssh" stable {{ FULL_PATH }}
+        chroot {{ FULL_PATH }} printf 'pts/0\npts/1\n' >> /etc/securetty
+        chroot {{ FULL_PATH }} /bin/bash -c "echo -e '1234\n1234' | passwd"
+        chroot {{ FULL_PATH }} /bin/bash -c "echo -e '$(hostname)-{{ CONTAINER_NAME }}' | tee /etc/hostname"
+    - unless: test -f {{ FULL_PATH }}/etc/securetty
 {% endif %}
 
 ############################ container creation

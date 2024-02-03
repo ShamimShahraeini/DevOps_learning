@@ -1,5 +1,8 @@
-{% set CONTAINER_NAME = 'mysql' %}
-{% set BASE_PATH = '/var/lib/machines/' %}
+{% set CONTAINER_NAME = salt['pillar.get'](grains.get('id') + ':container_name') %}
+{% set BASE_PATH = salt['pillar.get'](grains.get('id') + ':container_base_path') %}
+{% set FULL_PATH = BASE_PATH ~ CONTAINER_NAME %}
+
+############################ salt-minion setup on container
 
 ## TODO: ask and search for the reason of: `Failed to get shell PTY: Unit container-shell@1.service was already loaded or has a fragment file + Failed to get shell PTY: Protocol error`
 install_saltminion_on_container:
@@ -8,11 +11,9 @@ install_saltminion_on_container:
     - require:
       - sls: containers.container-setup
 
-
-## TODO: add dynamic "master" config > use grains? maybe
 configure_saltminion_on_container:
   file.managed:
-    - name: {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/salt/minion
+    - name: {{ FULL_PATH }}/etc/salt/minion
     - source: salt://containers/configs/minion_config.jinja
     - user: root
     - group: root
@@ -24,14 +25,15 @@ configure_saltminion_on_container:
     - require:
         - cmd: install_saltminion_on_container
 
+############################ salt-minion key exchange
 
 key_saltminion_on_container:
   file.absent:
-    - name: {{ BASE_PATH }}{{ CONTAINER_NAME }}/etc/salt/pki
+    - name: {{ FULL_PATH }}/etc/salt/pki
     - require:
         - cmd: install_saltminion_on_container
 
-start_salt_minion_on_container:
+start_saltminion_on_container:
   cmd.run:
     - name: machinectl shell {{ CONTAINER_NAME }} /bin/bash -c 'systemctl restart salt-minion'
     - require:
