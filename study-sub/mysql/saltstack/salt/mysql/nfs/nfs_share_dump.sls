@@ -31,7 +31,7 @@ set_directory_permissions:
 configure_exports:
   file.managed:
     - name: /etc/exports
-    - source: salt://mysql/configs/master_exports
+    - source: salt://mysql/nfs/configs/master_exports
     - template: jinja
     - context:
         replica_ip: {{ salt['pillar.get']('replica1:ip') }} 
