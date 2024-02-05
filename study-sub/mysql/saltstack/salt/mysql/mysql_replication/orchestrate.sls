@@ -1,30 +1,30 @@
-# mysql_all:
-#   salt.state:
-#     - tgt: '*mysql'
-#     - sls:
-#       - mysql.mysql_setup.init
+mysql_all:
+  salt.state:
+    - tgt: '*mysql'
+    - sls:
+      - mysql.mysql_setup.init
 
 mysql_master:
   salt.state:
-    - tgt: 'minion1db-mysql'
+    - tgt: 'minion1-mysql'
     - sls:
       - mysql.mysql_replication.master
 
 mysql_replica:
   salt.state:
-    - tgt: 'minion2db-mysql'
+    - tgt: 'minion2-mysql'
     - sls:
       - mysql.mysql_replication.replication
 
 mysql_dump_master:
   salt.state:
-    - tgt: 'minion1db-mysql'
+    - tgt: 'minion1-mysql'
     - sls:
        - mysql.mysql_replication.dump_master_data
 
 mysql_replica_use_dump:
   salt.state:
-    - tgt: 'minion2db-mysql'
+    - tgt: 'minion2-mysql'
     - sls:
       - mysql.mysql_replication.use_dump_on_replica
 

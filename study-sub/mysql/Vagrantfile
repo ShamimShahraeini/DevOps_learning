@@ -24,7 +24,7 @@ Vagrant.configure(2) do |config|
       salt.seed_master = {
                           "minion1" => "saltstack/etc/keys/minion.pub",
                           "minion2" => "saltstack/etc/keys/minion.pub",
-                          "minion3" => "saltstack/etc/keys/minion.pub"
+                          # "minion3" => "saltstack/etc/keys/minion.pub"
                          }
       #salt.orchestrations = true 
       salt.install_type = "stable"
@@ -39,7 +39,7 @@ Vagrant.configure(2) do |config|
   [
     ["minion1",    "#{net_ip}.11",    "1024",    os ],
     ["minion2",    "#{net_ip}.12",    "1024",    os ],
-    ["minion3",    "#{net_ip}.13",    "1024",    os ],    
+    # ["minion3",    "#{net_ip}.13",    "1024",    os ],    
   ].each do |vmname,ip,mem,os|
     config.vm.define "#{vmname}" do |minion_config|
       minion_config.vm.provider "virtualbox" do |vb|

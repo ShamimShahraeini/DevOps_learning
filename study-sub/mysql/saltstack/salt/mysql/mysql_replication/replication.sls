@@ -13,6 +13,12 @@ mysql-replication-configfile-append:
       - cmd: mysql-replication-stop
       - sls: mysql.mysql_setup.service
 
+mysql-restart-if-config-changes:
+  cmd.run:
+    - name: systemctl restart mysql
+    - watch:
+      - mysql-replication-configfile-append
+
 mysql-replication-stop:
   cmd.run:
     - name: "mysql -e \"STOP REPLICA;\" "
