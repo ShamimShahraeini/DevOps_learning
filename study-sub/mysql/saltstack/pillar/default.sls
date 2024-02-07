@@ -20,3 +20,6 @@ servers:
     container_base_path: /var/lib/machines/
     bind_path: /var/lib/mysql
     # port:
+
+include:
+  - db

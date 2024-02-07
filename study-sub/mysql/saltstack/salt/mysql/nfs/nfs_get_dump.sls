@@ -1,3 +1,5 @@
+{% set master_ip = salt['pillar.get']('containers:master:ip') %}
+
 update_apt:
   cmd.run:
     - name: apt-get update
@@ -16,7 +18,7 @@ create_shared_directory:
 
 use_shared_dir:
   cmd.run:
-    - name: mount -t nfs {{ salt['pillar.get']('master:ip') }}:/mnt/dbshareddir /var/dbshareddir
+    - name: mount -t nfs {{ master_ip }}:/mnt/dbshareddir /var/dbshareddir
     - require:
         - cmd: create_shared_directory
 

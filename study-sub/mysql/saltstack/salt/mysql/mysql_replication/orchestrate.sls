@@ -1,40 +1,52 @@
-mysql_all:
+
+{% for node, attr in salt.pillar.get('containers', []).items() %}
+mysql_setup_{{ node }}:
   salt.state:
-    - tgt: '*mysql'
+    - tgt: '{{ attr.host }}'
     - sls:
       - mysql.mysql_setup.init
 
-mysql_master:
+{% if attr.role == 'db-master' %}
+mysql_rep_{{ node }}:
   salt.state:
-    - tgt: 'minion1-mysql'
+    - tgt: '{{ attr.host }}'
     - sls:
       - mysql.mysql_replication.master
+{% endif %}
 
-mysql_replica:
+{% if attr.role == 'db-replica' %}
+mysql_rep_{{ node }}:
   salt.state:
-    - tgt: 'minion2-mysql'
+    - tgt: '{{ attr.host }}'
     - sls:
       - mysql.mysql_replication.replication
+{% endif %}
 
-mysql_dump_master:
+{% if attr.role == 'db-master' %}
+mysql_dump_{{ node }}:
   salt.state:
-    - tgt: 'minion1-mysql'
+    - tgt: '{{ attr.host }}'
     - sls:
-       - mysql.mysql_replication.dump_master_data
+      - mysql.mysql_replication.dump_master_data
+{% endif %}
 
-mysql_replica_use_dump:
+{% if attr.role == 'db-replica' %}
+mysql_use_dump_{{ node }}:
   salt.state:
-    - tgt: 'minion2-mysql'
+    - tgt: '{{ attr.host }}'
     - sls:
       - mysql.mysql_replication.use_dump_on_replica
+{% endif %}
 
-mysql_all_restart:
+mysql_restart_{{ node }}:
   salt.state:
-    - tgt: '*mysql'
+    - tgt: '{{ attr.host }}'
     - sls:
       - mysql.mysql_setup.service
     - watch:
-      - salt: mysql_master
-      - salt: mysql_replica
+      - salt: mysql_setup_{{ node }}
+      
+{% endfor %}
+
 
 #  on master > salt-run state.orchestrate mysql.mysql_replication.orchestrate

@@ -1,3 +1,5 @@
+{% set replica_ip = salt['pillar.get']('containers:replica1:ip') %}
+
 update_apt:
   cmd.run:
     - name: apt-get update
@@ -34,7 +36,7 @@ configure_exports:
     - source: salt://mysql/nfs/configs/master_exports
     - template: jinja
     - context:
-        replica_ip: {{ salt['pillar.get']('replica1:ip') }} 
+        replica_ip: {{ replica_ip }} 
     - require:
       - cmd: set_directory_permissions
 

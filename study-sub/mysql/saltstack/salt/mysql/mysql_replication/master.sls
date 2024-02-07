@@ -1,8 +1,7 @@
-{% set replica_ip = salt['pillar.get']('replica1:ip') %}
-{% set replica_user = salt['pillar.get']('replica1:user') %}
-{% set replica_pass = salt['pillar.get']('replica1:pass') %}
+{% set replica_ip = salt['pillar.get']('containers:replica1:ip') %}
+{% set replica_user = salt['pillar.get']('containers:master:user') %}
+{% set replica_pass = salt['pillar.get']('containers:master:pass') %}
 
-## TODO: pillar > user, pass secure
 mysql-master-createuser:
   cmd.run:
     - name: "mysql -e \"CREATE USER '{{ replica_user }}'@'{{ replica_ip }}' identified by '{{ replica_pass }}';\" "

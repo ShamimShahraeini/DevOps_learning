@@ -1,6 +1,6 @@
-{% set master_ip = salt['pillar.get']('master:ip') %}
-{% set replica_user = salt['pillar.get']('replica1:user') %}
-{% set replica_pass = salt['pillar.get']('replica1:pass') %}
+{% set master_ip = salt['pillar.get']('containers:master:ip') %}
+{% set replica_user = salt['pillar.get']('containers:master:user') %}
+{% set replica_pass = salt['pillar.get']('containers:master:pass') %}
 
 mysql-replication-configfile-append:
   file.append:
@@ -27,16 +27,16 @@ mysql-replication-stop:
 
 mysql-replication-config:
   cmd.run:
-    - name: "mysql -e \"CHANGE REPLICATION SOURCE TO SOURCE_HOST = '{{ master_ip }}', SOURCE_USER = '{{ replica_user }}',
-SOURCE_PASSWORD = '{{ replica_pass }}', SOURCE_AUTO_POSITION = 1, GET_MASTER_PUBLIC_KEY=1;\" "
+    - name: "mysql -e \"CHANGE REPLICATION SOURCE TO SOURCE_HOST = '{{ master_ip }}', SOURCE_USER = '{{ replica_user }}', SOURCE_PASSWORD = '{{ replica_pass }}', SOURCE_AUTO_POSITION = 1, GET_MASTER_PUBLIC_KEY=1;\" "
     - unless: "mysql -e  \"SHOW REPLICA STATUS;\" | grep \"Slave_SQL_Running: Yes\" "
 
 mysql-replication-start:
   cmd.run:
     - name: "mysql -e \"START REPLICA;\" "
 
+mysql-reset-master:
+  cmd.run:
+    - name: "mysql -e \"RESET MASTER;\" "
+
 include:
   - mysql.mysql_setup.service
-
-
-
