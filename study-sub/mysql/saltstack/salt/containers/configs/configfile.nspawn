@@ -2,7 +2,11 @@
 Boot=on
 
 [Files]
-Bind=/var/lib/mysql
+{% if BIND_PATH != None %}
+Bind={{ BIND_PATH}}
+{% endif %}
 
 [Network]
-#Port=3306:3306
+{% if BIND_PATH != None %}
+Port={{ PORT }}:{{ PORT }}
+{% endif %}

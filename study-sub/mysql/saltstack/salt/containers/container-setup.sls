@@ -1,5 +1,7 @@
 {% set CONTAINER_NAME = salt['pillar.get'](grains.get('id') + ':container_name') %}
 {% set BASE_PATH = salt['pillar.get'](grains.get('id') + ':container_base_path') %}
+{% set BIND_PATH = salt['pillar.get'](grains.get('id') + ':bind_path') %}
+{% set PORT = salt['pillar.get'](grains.get('id') + ':port') %}
 {% set FULL_PATH = BASE_PATH ~ CONTAINER_NAME %}
 
 include:
@@ -27,7 +29,9 @@ create_container_configfile:
     - source: salt://containers/configs/configfile.nspawn
     - makedirs: True
     - template: jinja                  
-    - CONTAINER_NAME: {{ CONTAINER_NAME }}      
+    - CONTAINER_NAME: {{ CONTAINER_NAME }}  
+    - BIND_PATH: {{ BIND_PATH }}    
+    - PORT: {{ PORT }}
     - unless: test -f /etc/systemd/nspawn/{{ CONTAINER_NAME }}.nspawn
 
 create_container_unitfile:

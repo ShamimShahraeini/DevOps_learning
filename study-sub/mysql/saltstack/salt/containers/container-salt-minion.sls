@@ -4,7 +4,6 @@
 
 ############################ salt-minion setup on container
 
-## TODO: ask and search for the reason of: `Failed to get shell PTY: Unit container-shell@1.service was already loaded or has a fragment file + Failed to get shell PTY: Protocol error`
 install_saltminion_on_container:
   cmd.run:
     - name: machinectl shell {{ CONTAINER_NAME }} /bin/bash -c 'wget -O - https://bootstrap.saltproject.io | sh'
@@ -27,14 +26,14 @@ configure_saltminion_on_container:
 
 ############################ salt-minion key exchange
 
-key_saltminion_on_container:
-  file.absent:
-    - name: {{ FULL_PATH }}/etc/salt/pki
-    - require:
-        - cmd: install_saltminion_on_container
-
 start_saltminion_on_container:
   cmd.run:
     - name: machinectl shell {{ CONTAINER_NAME }} /bin/bash -c 'systemctl restart salt-minion'
+    - require:
+      - file: configure_saltminion_on_container
+
+enable_saltminion_on_container:
+  cmd.run:
+    - name: machinectl shell {{ CONTAINER_NAME }} /bin/bash -c 'systemctl enable salt-minion'
     - require:
       - file: configure_saltminion_on_container
