@@ -1,7 +1,7 @@
-{% set CONTAINER_NAME = salt['pillar.get'](grains.get('id') + ':container_name') %}
-{% set BASE_PATH = salt['pillar.get'](grains.get('id') + ':container_base_path') %}
-{% set BIND_PATH = salt['pillar.get'](grains.get('id') + ':bind_path') %}
-{% set PORT = salt['pillar.get'](grains.get('id') + ':port') %}
+{% set CONTAINER_NAME = salt['pillar.get']('servers:' + grains.get('id') + ':container_name') %}
+{% set BASE_PATH = salt['pillar.get']('servers:' + grains.get('id') + ':container_base_path') %}
+{% set BIND_PATH = salt['pillar.get']('servers:' + grains.get('id') + ':bind_path') %}
+{% set PORT = salt['pillar.get']('servers:' + grains.get('id') + ':port') %}
 {% set FULL_PATH = BASE_PATH ~ CONTAINER_NAME %}
 
 include:
