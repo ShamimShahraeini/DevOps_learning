@@ -12,9 +12,7 @@ mysql_rep_{{ node }}:
     - tgt: '{{ attr.host }}'
     - sls:
       - mysql.mysql_replication.master
-{% endif %}
-
-{% if attr.role == 'db-replica' %}
+{% elif attr.role == 'db-replica' %}
 mysql_rep_{{ node }}:
   salt.state:
     - tgt: '{{ attr.host }}'
@@ -28,9 +26,7 @@ mysql_dump_{{ node }}:
     - tgt: '{{ attr.host }}'
     - sls:
       - mysql.mysql_replication.dump_master_data
-{% endif %}
-
-{% if attr.role == 'db-replica' %}
+{% elif attr.role == 'db-replica' %}
 mysql_use_dump_{{ node }}:
   salt.state:
     - tgt: '{{ attr.host }}'
