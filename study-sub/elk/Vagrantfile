@@ -1,0 +1,68 @@
+Vagrant.configure(2) do |config|
+  os = "ubuntu/focal64"
+  net_ip = "192.168.56"
+
+  config.vm.define :master, primary: true do |master_config|
+    master_config.vm.provider "virtualbox" do |vb|
+        vb.memory = "1024"
+        vb.cpus = 1
+        vb.name = "master"
+    end
+
+    master_config.vm.box = "#{os}"
+    master_config.vm.host_name = 'saltmaster.local'
+    master_config.vm.network "private_network", ip: "#{net_ip}.10"
+    master_config.vm.synced_folder "saltstack/salt/", "/srv/salt"
+    master_config.vm.synced_folder "saltstack/pillar/", "/srv/pillar"
+
+    master_config.vm.provision :salt do |salt|
+      salt.master_config = "saltstack/etc/master"
+      salt.master_key = "saltstack/etc/keys/master_minion.pem"
+      salt.master_pub = "saltstack/etc/keys/master_minion.pub"
+      salt.minion_key = "saltstack/etc/keys/master_minion.pem"
+      salt.minion_pub = "saltstack/etc/keys/master_minion.pub"
+      salt.seed_master = {
+                          "minion1" => "saltstack/etc/keys/minion.pub",
+                          "minion2" => "saltstack/etc/keys/minion.pub",
+                          # "minion3" => "saltstack/etc/keys/minion.pub"
+                         }
+      #salt.orchestrations = true 
+      salt.install_type = "stable"
+      salt.install_master = true
+      salt.no_minion = true
+      salt.verbose = true
+      salt.colorize = true
+      salt.bootstrap_options = "-P -c /tmp -x python3"
+    end
+  end
+
+  [
+    ["minion1",    "#{net_ip}.11",    "2048",    os ],
+    ["minion2",    "#{net_ip}.12",    "2048",    os ],
+    # ["minion3",    "#{net_ip}.13",    "2048",    os ],    
+  ].each do |vmname,ip,mem,os|
+    config.vm.define "#{vmname}" do |minion_config|
+      minion_config.vm.provider "virtualbox" do |vb|
+          vb.memory = "#{mem}"
+          vb.cpus = 1
+          vb.name = "#{vmname}"
+      end
+
+      minion_config.vm.box = "#{os}"
+      minion_config.vm.hostname = "#{vmname}"
+      minion_config.vm.network "private_network", ip: "#{ip}"
+
+      minion_config.vm.provision :salt do |salt|
+        salt.minion_config = "saltstack/etc/minion"
+        salt.minion_id = "#{vmname}"
+        salt.minion_key = "saltstack/etc/keys/minion.pem"
+        salt.minion_pub = "saltstack/etc/keys/minion.pub"
+        salt.run_highstate = true
+        salt.install_type = "stable"
+        salt.verbose = true
+        salt.colorize = true
+        salt.bootstrap_options = "-P -c /tmp -x python3"
+      end
+    end
+  end
+end
