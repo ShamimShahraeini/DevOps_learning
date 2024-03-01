@@ -2,7 +2,7 @@ containers:
   master:
     host: minion1-elastic
     ip: 192.168.56.11
-    role: elastic-node
+    role: elastic-master-node
     enabled: true
     bind:
       address: 0.0.0.0
@@ -12,10 +12,13 @@ containers:
       multicast: false
       members:
         - host: minion1-elastic
+          ip: 192.168.56.11
           port: 9300
         - host: minion2-elastic
+          ip: 192.168.56.12
           port: 9300
         - host: minion3-elastic
+          ip: 192.168.56.13
           port: 9300
     index:
       shards: 5

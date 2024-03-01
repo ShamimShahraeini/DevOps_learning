@@ -14,7 +14,7 @@ import_elasticsearch_gpg_key:
 add_elasticsearch_repo:
   file.append:
     - name: /etc/apt/sources.list.d/elastic-8.list
-    - text: "deb [signed-by=/usr/share/keyrings/elasticsearch.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main"
+    - text: "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/8.x/apt stable main"
     - unless: grep -q "elastic-8.list" /etc/apt/sources.list.d/*
     - require:
       - cmd: import_elasticsearch_gpg_key
@@ -32,18 +32,29 @@ install_elasticsearch:
     - require:
       - pkg: update_apt_cache
 
+install_curl:
+  pkg.installed:
+    - name: curl
+    - unless: dpkg -l | grep -q "curl"
+    - require:
+      - pkg: update_apt_cache
+
 ################## configuration
 
 modify_elasticsearch_config:
   file.managed:
     - name: /etc/elasticsearch/elasticsearch.yml
-    - source: salt://elk/configs/elasticsearch.yml.jinja
+    - source: salt://elk/configs/elasticsearch1.yml.jinja
     - template: jinja
     - require:
         - pkg: install_elasticsearch
     # - name: /etc/elasticsearch/elasticsearch.yml
     # - pattern: 'cluster.initial_master_nodes: \["\?"\]'
     # - repl: 'cluster.initial_master_nodes: ["{{ grains['fqdn'] }}"]'
+
+tune_heap_size:
+  cmd.run:
+    - name: echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 
 restart_elasticsearch_service:
   service.running:
