@@ -6,8 +6,8 @@ install_java:
 
 import_elasticsearch_gpg_key:
   cmd.run:
-    - name: wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor | tee /usr/share/keyrings/elasticsearch.gpg
-    - unless: test -f /usr/share/keyrings/elasticsearch.gpg
+    - name: wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor | tee /usr/share/keyrings/elasticsearch-keyring.gpg
+    - unless: test -f /usr/share/keyrings/elasticsearch-keyring.gpg
     - require:
       - pkg: install_java
 

@@ -3,14 +3,14 @@
 import_gpg_key:
   cmd.run:
     - name: wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
-    - unless: test -f /usr/share/keyrings/elasticsearch.gpg
+    - unless: test -f /usr/share/keyrings/elasticsearch-keyring.gpg
 
 install_kibana_dependencies:
   pkg.installed:
     - name: apt-transport-https
     - unless: dpkg -l | grep -q "apt-transport-https"
     - require:
-      - pkg: import_gpg_key
+      - cmd: import_gpg_key
 
 add_repo:
   file.append:
@@ -35,19 +35,20 @@ install_kibana:
 
 ################## configuration
 
-# modify_kibana_config:
-#   file.managed:
-#     - name: /etc/kibana/kibana.yml
-#     - source: salt://elk/configs/kibana.yml.jinja
-#     - template: jinja
-#     - require:
-#         - pkg: install_elasticsearch
+modify_kibana_config:
+  file.managed:
+    - name: /etc/kibana/kibana.yml
+    - source: salt://elk/configs/kibana.yml.jinja
+    - template: jinja
+    - require:
+        - pkg: install_kibana
 
-# restart_kibana_service:
-#   service.running:
-#     - name: kibana
-#     - enable: True
-#     - enable_on_boot: True
-#     - watch:
-#       - file: modify_kibana_config
+restart_kibana_service:
+  service.running:
+    - name: kibana
+    - enable: True
+    - enable_on_boot: True
+    - watch:
+      - file: modify_kibana_config
+
 
