@@ -1,0 +1,22 @@
+{
+  "pools":{
+    "A":{
+      "servers":["192.168.56.11:11211"]
+    }, "B":{
+       "servers":["192.168.56.12:11211"]
+    }
+  },
+  "route":{
+    "type":"OperationSelectorRoute",
+    "default_policy":"PoolRoute|A",
+    "operation_policies":{
+      "set":{
+        "type":"AllSyncRoute",
+        "children":["PoolRoute|A", "PoolRoute|B"]
+      }, "get":{
+        "type":"LatestRoute",
+        "children":["PoolRoute|A", "PoolRoute|B"]
+      }
+    }
+  }
+}

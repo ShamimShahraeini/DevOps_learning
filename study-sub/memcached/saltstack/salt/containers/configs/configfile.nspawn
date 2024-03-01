@@ -1,0 +1,12 @@
+[Exec]
+Boot=on
+
+[Files]
+{% if BIND_PATH != None %}
+Bind={{ BIND_PATH}}
+{% endif %}
+
+[Network]
+{% if BIND_PATH != None %}
+Port={{ PORT }}:{{ PORT }}
+{% endif %}
